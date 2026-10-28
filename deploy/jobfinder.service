@@ -1,0 +1,12 @@
+# Report and application tracker on http://127.0.0.1:8765/. Assumes the repo is cloned to ~/jobfinder.
+[Unit]
+Description=Job finder report and application tracker (http://127.0.0.1:8765/)
+
+[Service]
+WorkingDirectory=%h/jobfinder
+ExecStart=%h/jobfinder/run.sh --serve --no-browser
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

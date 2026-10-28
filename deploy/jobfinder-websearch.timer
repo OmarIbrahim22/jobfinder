@@ -1,0 +1,16 @@
+# Weekly run on Monday night, with hourly retries in case the usage limit stops it. A run continues where the
+# last one stopped and disables the timer when all segments are done; delete .cache/web/*.done and
+# re-enable the timer for the next round.
+[Unit]
+Description=Job finder: night-time web search
+
+[Timer]
+OnCalendar=Tue *-*-* 02:45
+OnCalendar=Tue *-*-* 04:30
+OnCalendar=Tue *-*-* 05:30
+OnCalendar=Tue *-*-* 06:30
+# Not Persistent: a firing missed while the laptop sleeps is skipped, not started on wake-up.
+Persistent=false
+
+[Install]
+WantedBy=timers.target

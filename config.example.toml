@@ -1,0 +1,152 @@
+# Job finder settings. Copy to config.toml, edit freely, then run ./run.sh
+
+max_age_days = 14         # only offers posted within this many days
+student_max_age_days = 30 # wider window for internship / part-time searches, they are rarer
+max_pages = 3             # result pages fetched per query
+student_max_pages = 6     # deeper for internship / part-time searches, where the 80+ offers come from
+worki_max_pages = 12      # worki.sk student list, all of Slovakia, filtered to the locations below
+max_detail_fetches = 300  # job descriptions downloaded per run (they are cached)
+web_max_age_days = 45     # offers from web_finds.json are kept this long after they were found
+request_delay = 0.8       # seconds between requests, be polite
+min_score = 15            # offers scoring below this are left out of the report
+
+# LinkedIn's robots.txt disallows automated access, so this is off by default.
+# It uses the public no-login job search at low volume, titles only.
+linkedin = false
+
+# profesia: slug in profesia.sk/praca/<slug>/ (a kraj slug covers the towns around the city too)
+# jobscz: slug in jobs.cz/prace/<slug>/, jobscz_radius in km
+# linkedin: place names searched on LinkedIn
+# worki: regex for the place shown on worki.sk cards
+[[locations]]
+name = "Bratislava"
+profesia = "bratislavsky-kraj"
+linkedin = ["Bratislava"]
+worki = "Bratislav|Senec|Pezinok|Malack|Stupav|Modra|Svätý Jur|Ivanka|Bernolákovo|Chorvátsky Grob|Rovinka"
+
+[[locations]]
+name = "Trnava / Piešťany"
+profesia = "trnavsky-kraj"
+linkedin = ["Trnava", "Piešťany"]
+worki = "Trnav|Piešťan|Piestan|Hlohov|Galant|Sereď|Sered|Senic|Skalic|Šamorín|Dunajská Streda|Vrbov|Leopoldov"
+
+[[locations]]
+name = "Brno"
+jobscz = "brno"
+jobscz_radius = 10
+linkedin = ["Brno"]
+
+[queries]
+profesia = ["developer", "programátor", "software", "junior", "intern", "stáž", "študent", "absolvent", "tester", "typescript", "java", "python", "embedded", "linux", "data analyst", "devops"]
+jobscz = ["developer", "programátor", "junior", "intern", "stáž", "student", "absolvent", "tester", "typescript", "java", "python", "embedded", "linux", "data analyst", "devops"]
+linkedin = ["intern", "internship IT", "working student", "student developer", "part-time developer", "stáž", "trainee", "junior developer", "junior software engineer", "junior tester", "embedded developer"]
+
+# Searches limited to contract types that fit studying. Everything they return is tagged
+# and gets the full student bonus.
+[student_searches]
+profesia_jobtypes = { internship = 32, "part-time" = 2, "brigáda" = 4 }   # IT category, by contract type
+jobscz_part_time_queries = ["IT", "developer", "programátor", "software", "tester", "stáž", "student", "python", "java", "javascript", "linux", "data", "brigáda"]
+linkedin_queries = ["developer", "software engineer", "IT", "programátor", "data"]   # LinkedIn with the internship / part-time filter
+worki = true                                                            # worki.sk student agreement / internship / part-time
+
+[title]
+# An offer is kept only if its title matches at least one of these (regex, case-insensitive)...
+must_match = [
+  "develop", "vývoj", "vyvoj", "programát", "programm", "programov", "programer", "software", "softvér", "engineer", "inžinier", "inženýr",
+  "front.?end", "back.?end", "full.?stack", "devops", "typescript", "javascript", "react", "node",
+  "\\bjava\\b", "python", "c#", "\\.net", "c\\+\\+", "embedded", "firmware", "linux", "\\bweb", "\\bIT\\b",
+  "tester", "\\bQA\\b", "test", "support", "podpor", "helpdesk", "service desk", "administr", "správ", "analy",
+  "\\bdata", "dát", "\\bAI\\b", "cloud", "network", "sieť", "síť", "security", "\\bSW\\b", "test automat",
+  "kyber", "cyber", "systems? engineer", "sysadmin",
+]
+# ...and none of these.
+exclude = [
+  "senior", "\\blead\\b", "principal", "archite[ck]t", "head of", "manager", "manažér", "manažer",
+  "vedúci", "vedoucí", "\\bstaff\\b", "expert", "business develop", "sales", "obchod", "\\bSAP\\b",
+  "konštrukt", "konstrukt", "CNC", "PLC", "elektro", "stavebn", "servisn", "service engineer",
+  "process engineer", "quality engineer", "procesn", "mechanic", "strojn", "kvalit", "právn",
+  "marketing", "account", "účt", "financ", "assistant to", "asistent", "HR\\b", "recruit", "logist", "sklad", "vodič", "řidič",
+  "predaj", "prodej", "zákazn", "customer", "call cent", "mentoring", "hack challenge",
+  "dizajn", "design", "ekonom", "výzkum", "hydraul", "nákup", "procurement", "lektor", "mechanik", "regulac",
+  "scientist", "kongres", "komunikac", "electronics", "\\bHW\\b", "projektov", "black box",
+  "\\brisk\\b", "rizik", "rizík", "aktuár", "actuar",
+]
+
+# Skill weights taken from the CV and the LinkedIn skills list. A hit in the title counts double.
+# Weights follow how much you have used each skill: production work > projects > coursework.
+# Names without a regex in SKILL_PATTERNS (jobfinder.py) are matched literally.
+[skills]
+# Level.Works internship
+typescript = 10
+"node.js" = 10
+react = 9
+javascript = 8
+"full-stack" = 6
+prisma = 5
+aws = 5
+mobile = 3
+testing = 3
+# projects
+java = 6
+"spring boot" = 5
+go = 5
+express = 5
+"front-end" = 5
+drizzle = 4
+docker = 4
+postgresql = 3
+sql = 3
+"rest api" = 3
+"ci/cd" = 3
+tailwind = 2
+storybook = 2
+figma = 2
+webassembly = 2
+# coursework
+"c#" = 5
+python = 5
+c = 4
+linux = 4
+embedded = 5
+oop = 3
+# other
+git = 1
+html = 1
+css = 1
+agile = 1
+jira = 1
+
+[bonus]
+skills_cap = 35        # most that stack overlap can contribute
+student = 45           # intern / stáž / student / part-time / brigáda in the title, or found by a student search
+student_in_text = 25   # the description says it suits students or is part-time
+junior = 15            # junior / graduate / absolvent in the title
+junior_in_text = 5
+medior = -10
+german = -25           # German required (title); half of it when only in the description
+experience_3y = -10
+experience_5y = -20
+# From your tracker notes
+full_time = -35        # the offer says full-time and nothing says part-time / student
+shifts = -10           # shift work, hard to fit around lectures
+support_role = -20     # support / helpdesk / service desk in the title
+training_program = -25 # academy / bootcamp / training programme rather than a real job
+non_it = -30           # the description asks for an economics or financial-maths degree
+
+# How ratings and statuses from the tracker change the ranking.
+[learning]
+strength = 4          # points per unit of learned preference
+max_adjust = 20       # most that your ratings can move one offer, up or down
+learned_queries = 4   # title words you keep rating highly are added as search terms (0 = off)
+
+# Mailbox check (inbox.py): sorts replies to your applications and updates the tracker.
+# Password: an app password in the keyring, see the top of inbox.py.
+[mail]
+address = "you@example.com"
+imap_host = "imap.gmail.com"
+days = 30                  # how far back the first check reads; later checks read since the last one
+max_per_run = 80           # most messages sorted per check
+model = "sonnet"           # Claude model that sorts the mail
+auto_update_tracker = true # interview / offer / rejection mails move the tracker status
+add_untracked = true       # application confirmations for offers not in the tracker add them as "applied"
+name = "Your Name"         # signature on draft replies

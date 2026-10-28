@@ -1,0 +1,17 @@
+# Whitelist: only the files below are ever committed. Everything else in this folder is personal
+# (config.toml, tracker.json, web_finds.json, report.html, .cache/, CVs, other projects) and stays local.
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/jobfinder.py
+!/inbox.py
+!/config.example.toml
+!/requirements.txt
+!/run.sh
+!/night_web_search.sh
+!/web_search_brief.md
+!/deploy/
+!/docs/
+!/tools/
+__pycache__/

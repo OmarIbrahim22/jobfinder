@@ -1,0 +1,11 @@
+# Night-time web search with headless Claude Code (see web_search_brief.md). Needs the `claude` CLI on PATH.
+[Unit]
+Description=Job finder: night-time web search with Claude
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/jobfinder
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/jobfinder/night_web_search.sh 1 2 3 4
+TimeoutStartSec=5h

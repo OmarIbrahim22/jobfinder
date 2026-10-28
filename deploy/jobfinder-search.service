@@ -1,0 +1,8 @@
+[Unit]
+Description=Job finder: search the job boards for new offers
+Wants=jobfinder.service
+After=jobfinder.service network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -fsS --retry 6 --retry-delay 10 --retry-connrefused -X POST http://127.0.0.1:8765/api/search

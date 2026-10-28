@@ -1,0 +1,10 @@
+[Unit]
+Description=Job finder: daily search for new offers
+
+[Timer]
+OnCalendar=*-*-* 09:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target
