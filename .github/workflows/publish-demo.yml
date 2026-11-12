@@ -1,0 +1,46 @@
+# Publishes the demo site: on every push to main that changes it, the site files are copied into the public
+# jobfinder-demo repo (served by GitHub Pages at omaribrahim22.github.io/jobfinder-demo/, the link in the CV).
+# The site stays in a public repo on purpose: Pages from this private repo needs GitHub Pro, and would change that URL.
+# Needs the secret DEMO_DEPLOY_KEY: the private half of a deploy key with write access on jobfinder-demo.
+name: Publish demo site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/index.html
+      - docs/demo.html
+      - docs/how-it-works.html
+      - docs/img/**
+      - tools/publish_demo.sh
+      - .github/workflows/publish-demo.yml
+  workflow_dispatch:
+
+concurrency:
+  group: publish-demo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check out jobfinder-demo
+        uses: actions/checkout@v5
+        with:
+          repository: OmarIbrahim22/jobfinder-demo
+          ssh-key: ${{ secrets.DEMO_DEPLOY_KEY }}
+          path: demo
+
+      - name: Copy the site and commit
+        run: |
+          git -C demo config user.name "Omar Ibrahim"
+          git -C demo config user.email "omaribrahimworkmail@gmail.com"
+          tools/publish_demo.sh demo
+
+      - name: Push
+        run: git -C demo push

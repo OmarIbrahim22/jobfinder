@@ -29,6 +29,7 @@
   h1 { font-size: clamp(32px, 6vw, 48px); line-height: 1.1; margin: 8px 0 16px; }
   .lead { font-size: 19px; color: var(--muted); max-width: 680px; margin: 0 0 28px; }
   .buttons { display: flex; flex-wrap: wrap; gap: 12px; }
+  .buttons.more { margin-top: 16px; }
   .btn { display: inline-block; padding: 11px 20px; border-radius: 10px; font-weight: 600; text-decoration: none; border: 1px solid var(--line); color: var(--fg); background: var(--card); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--card); }
   section { padding: 36px 0; }
@@ -68,7 +69,7 @@
     learns from how I rate them, and sends Claude agents to research company career pages overnight.</p>
   <div class="buttons">
     <a class="btn primary" href="demo.html">Try the live demo</a>
-    <a class="btn" href="https://github.com/OmarIbrahim22/jobfinder">Source on GitHub</a>
+    <a class="btn" href="https://linkedin.com/in/omaribrahim-22-it-student">Source code on request</a>
   </div>
 </header>
 
@@ -86,7 +87,7 @@
 
 <section>
   <h2>See it working</h2>
-  <p class="sub">The demo is a snapshot of real offers. You can filter, expand descriptions, rate offers and track applications in the browser.</p>
+  <p class="sub">The demo uses placeholder offers modelled on a real search: the scores and matched skills are real, the companies, titles and descriptions are made up. You can filter, expand descriptions, rate offers and track applications in the browser.</p>
   <div class="shots">
     <figure><a href="demo.html"><img class="shot" src="img/offers.png" alt="Ranked job offers with scores, skill tags and an expanded requirements summary"></a>
       <figcaption>Ranked offers with matched skills and a short summary of the requirements.</figcaption></figure>
@@ -99,13 +100,14 @@
   <h2>How it works</h2>
   <p class="sub">Everything runs on my laptop as small systemd services. The tracker is a local web page on <code>127.0.0.1</code>.</p>
   <div class="flow">
-    <div class="step"><b>Search</b><span>Scrapers for profesia.sk, jobs.cz and worki.sk (LinkedIn opt-in), with polite delays and robots.txt respected.</span></div>
+    <div class="step"><b>Search</b><span>Scrapers for profesia.sk, jobs.cz and worki.sk, with polite delays and robots.txt respected.</span></div>
     <div class="step"><b>Filter</b><span>Title rules drop senior, sales and non-IT roles; duplicates across sources are merged.</span></div>
     <div class="step"><b>Score</b><span>Skill weights from my CV, a strong bonus for internship / part-time, penalties for full-time, shifts and academies.</span></div>
     <div class="step"><b>Learn</b><span>Star ratings and "not relevant" clicks adjust the ranking and suggest new search terms.</span></div>
     <div class="step"><b>Summarise</b><span>Descriptions are cut down to contract facts, requirements and the role.</span></div>
     <div class="step"><b>Track</b><span>Statuses, notes and application dates, kept in a local JSON file.</span></div>
   </div>
+  <div class="buttons more"><a class="btn" href="how-it-works.html">See the full pipeline diagram</a></div>
 </section>
 
 <section>
@@ -123,7 +125,7 @@
       <p>A read-only IMAP check lets Claude sort replies into interview, offer, rejection or needs-reply, link them to applications,
         draft answers and move tracker statuses along.</p></div>
     <div class="card"><h3>Checking the AI</h3>
-      <p>Agent output is treated as data, not truth: when LinkedIn's part-time filter and an agent mislabelled full-time roles, the ranking
+      <p>Agent output is treated as data, not truth: when a job board's part-time filter and an agent mislabelled full-time roles, the ranking
         rules were changed so a description saying full-time always wins.</p></div>
   </div>
 </section>

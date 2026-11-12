@@ -3,8 +3,8 @@
 
 The report normally talks to the local tracker server. The demo replaces those calls with an in-memory
 stand-in, so stars, statuses and notes work but are forgotten when the tab closes. Searching, re-ranking
-and the mail inbox need the server and are hidden. Nothing personal goes in: the report holds only the
-scraped offers, never tracker.json or mail.
+and the mail inbox need the server and are hidden. The page it writes still holds the real offers (and score
+chips computed from tracker.json): run tools/make_demo_data.py next, publish_demo.sh refuses anything else.
 
 Usage: .venv/bin/python tools/build_demo.py [report.html] [docs/demo.html]
 """

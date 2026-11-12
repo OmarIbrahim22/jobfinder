@@ -123,9 +123,11 @@ student_in_text = 25   # the description says it suits students or is part-time
 junior = 15            # junior / graduate / absolvent in the title
 junior_in_text = 5
 medior = -10
-german = -25           # German required (title); half of it when only in the description
+german = -25           # German required (title)
+german_in_text = -13   # German only mentioned in the description
 experience_3y = -10
 experience_5y = -20
+freshness = [[1, 6], [3, 4], [7, 2]]  # [days, points]: posted within that many days, shortest first
 # From your tracker notes
 full_time = -35        # the offer says full-time and nothing says part-time / student
 shifts = -10           # shift work, hard to fit around lectures

@@ -61,6 +61,10 @@ Write a JSON array to the file you were given. One object per offer:
 - `desc`: copy the requirements and role sections from the page (up to ~2500 characters), with
   headings like `Requirements:` and one `• ` bullet per line, plus the contract type and hours if given.
   Do not paraphrase or invent anything.
+- When the `url` is a middleman that resells offers (e.g. dreamworkhq.com, iAgora, any site that makes
+  you sign up or pay to apply), find the employer's **own** posting for the same role and end `desc` with
+  `Apply: <that url>`. The report then links to the employer instead of the middleman. If you cannot find
+  the employer's own page, still include the offer, and the report will note it as a gated source.
 
 Report every offer you verified, even if it seems marginal; the scoring sorts them. Do not include
 offers you could not open.
