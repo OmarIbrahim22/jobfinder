@@ -1,18 +1,4 @@
 #!/usr/bin/env python3
-"""Put placeholder offers into the public demo page (docs/demo.html).
-
-Takes the offers from a page that embeds the report data (`const DATA = {...};`, e.g. report.html) and keeps
-what shows how the tool works: score, city, source, dates, matched skills, tags and the score notes. Everything
-that points to a real posting is replaced: company names are invented, titles become generic role titles,
-descriptions become template bullets built from the matched skills, links go to example.com, ids are renumbered.
-Only a small sample goes in (MAX_OFFERS) and nothing from LinkedIn: its terms forbid redistributing anything
-taken from it. The demo tracker is seeded with three example entries.
-
---check verifies a built page and exits non-zero if any of that does not hold; publish_demo.sh runs it.
-
-Usage: .venv/bin/python tools/make_demo_data.py report.html
-       .venv/bin/python tools/make_demo_data.py --check docs/demo.html
-"""
 
 import datetime as dt
 import json
@@ -70,9 +56,7 @@ FAMILIES = [
     ("fullstack", r"full.?stack", "Full Stack Developer", "Full stack vývojár", "Full stack vývojář"),
     ("frontend", r"front|react|angular|\bvue|\bUI\b", "Frontend Developer", "Frontend vývojár", "Frontend vývojář"),
     ("java", r"\bjava\b", "Java Developer", "Java programátor", "Java programátor"),
-    ("dotnet", r"\.net|c#", ".NET Developer", ".NET programátor", ".NET programátor"),
-    ("php", r"\bphp\b", "PHP Developer", "PHP programátor", "PHP programátor"),
-    ("python", r"python", "Python Developer", "Python programátor", "Python programátor"),
+    ("dotnet", r"\.net|c#", ".NET Developer", ".NET programátor", ".NET programátor"), ("php", r"\bphp\b", "PHP Developer", "PHP programátor", "PHP programátor"), ("python", r"python", "Python Developer", "Python programátor", "Python programátor"),
     ("sysadmin", r"administrát|sysadmin|správ|system|network|sieť|síť|linux|datacent", "Systems Administrator", "Správca IT systémov", "Správce IT systémů"),
     ("dev", r"", "Software Developer", "Programátor", "Programátor"),
 ]

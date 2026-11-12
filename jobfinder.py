@@ -140,30 +140,24 @@ def days_ago(n):
     return (TODAY - dt.timedelta(days=n)).isoformat()
 
 
+# Profesia (and worki.sk) show relative dates: "pred 3 dňami", "pred týždňom", "včera".
+PROFESIA_AGO_RE = re.compile(r"pred (\d+)\s+(\w+)")
+# Days per unit for "pred <n> <unit>", by the start of the (declined) unit word.
+PROFESIA_UNITS = [(("min", "hod"), 0), (("d",), 1), (("týž",), 7), (("mes",), 30)]
+# Phrases without a number, in order: "predvčerom" contains "včera".
+PROFESIA_WORDS = [("predvčerom", 2), ("včera", 1), ("dnes", 0), ("hodinou", 0), ("chvíľ", 0), ("týždňom", 7),
+                  ("mesiacom", 30)]
+
+
 def parse_profesia_date(s):
+    """ISO date for a Profesia-style relative date, or None when it shows none."""
     s = s.lower()
-    m = re.search(r"pred (\d+)\s+(\w+)", s)
-    if m:
+    if m := PROFESIA_AGO_RE.search(s):
         n, unit = int(m.group(1)), m.group(2)
-        if unit.startswith(("min", "hod")):
-            return days_ago(0)
-        if unit.startswith("d"):
-            return days_ago(n)
-        if unit.startswith("týž"):
-            return days_ago(7 * n)
-        if unit.startswith("mes"):
-            return days_ago(30 * n)
-    if "predvčerom" in s:
-        return days_ago(2)
-    if "včera" in s:
-        return days_ago(1)
-    if "dnes" in s or "hodinou" in s or "chvíľ" in s:
-        return days_ago(0)
-    if "týždňom" in s:
-        return days_ago(7)
-    if "mesiacom" in s:
-        return days_ago(30)
-    return None
+        per = next((days for starts, days in PROFESIA_UNITS if unit.startswith(starts)), None)
+        if per is not None:
+            return days_ago(n * per)
+    return next((days_ago(days) for word, days in PROFESIA_WORDS if word in s), None)
 
 
 def parse_jobscz_date(s):
@@ -1047,6 +1041,12 @@ $('links').innerHTML = DATA.links.map(([t, u]) => `<a href="${esc(u)}" target="_
 
 const entry = id => tracker[id] || {};
 const touched = e => e.status || e.rating || e.notes;
+// Status filter choices besides the statuses themselves (see setStatusOptions).
+const STATUS_FILTERS = {
+  all: () => true,
+  open: e => e.status !== 'not relevant',
+  untouched: e => !touched(e),
+};
 const openDesc = new Set();  // descriptions stay expanded across re-renders
 const sumText = s => s ? [...(s.facts || []), ...(s.req || []), ...(s.role || []), ...(s.overview || [])].join(' ') : '';
 
@@ -1119,12 +1119,18 @@ function mailCard(m) {
     </div>
   </div>`;
 }
-const mailTodo = () => (mail ? mail.messages : []).filter(m => m.worth_reading && !m.done);
+// The #mailview options; anything else shows "todo".
+const MAIL_VIEWS = {
+  todo: m => m.worth_reading && !m.done,
+  reply: m => m.needs_reply && !m.done,
+  read: m => m.worth_reading,
+  all: () => true,
+};
+const mailTodo = () => (mail ? mail.messages : []).filter(MAIL_VIEWS.todo);
 
 function renderInbox() {
   const view = $('mailview').value;
-  const rows = (mail ? mail.messages : []).filter(m =>
-    view === 'all' || (view === 'reply' ? m.needs_reply && !m.done : m.worth_reading && (view === 'read' || !m.done)));
+  const rows = (mail ? mail.messages : []).filter(MAIL_VIEWS[view] || MAIL_VIEWS.todo);
   rows.sort((a, b) => view === 'all' ? b.date.localeCompare(a.date) : (a.done - b.done) || (a.priority - b.priority) || b.date.localeCompare(a.date));
   const st = mail || {};
   $('hint').textContent = st.running ? 'Checking mail…' : st.error ? 'Last check failed: ' + st.error
@@ -1141,18 +1147,16 @@ function render() {
   for (const id of ['minwrap', 'studentwrap', 'newwrap']) $(id).hidden = tab !== 'offers';
   const text = j => (j.title + ' ' + j.company + ' ' + (j.skills || []).join(' ') + ' ' + (entry(j.id).notes || '') + ' ' + sumText(j.summary)).toLowerCase();
   const common = j => (!city || j.city === city) && (!source || j.source === source) && (!q || text(j).includes(q));
+  const statusOk = STATUS_FILTERS[status] || (e => e.status === status);
   let rows;
   if (tab === 'offers') {
-    rows = DATA.jobs.filter(j => {
-      const e = entry(j.id);
-      const okStatus = status === 'all' || (status === 'open' ? e.status !== 'not relevant' : status === 'untouched' ? !touched(e) : e.status === status);
-      return okStatus && common(j) && j.score >= min && (!newOnly || j.new) && (!studentOnly || j.student);
-    });
+    rows = DATA.jobs.filter(j =>
+      statusOk(entry(j.id)) && common(j) && j.score >= min && (!newOnly || j.new) && (!studentOnly || j.student));
     $('hint').textContent = online ? 'Set a status and stars on offers you have read. Stars, "not relevant" and your notes teach the ranking what you like; press "Re-rank with my ratings" to apply them now, and the next search uses them too.' : '';
   } else {
     // Tracked offers stay here even after they disappear from the job boards.
     rows = Object.entries(tracker).filter(([, e]) => touched(e)).map(([id, e]) => byId[id] || {...e.job, id, score: null, gone: true})
-      .filter(j => common(j) && (status === 'all' || entry(j.id).status === status));
+      .filter(j => common(j) && statusOk(entry(j.id)));
     const order = s => { const i = ['interview', 'offer', 'applied', 'interested', '', 'rejected', 'not relevant'].indexOf(s || ''); return i < 0 ? 9 : i; };
     rows.sort((a, b) => order(entry(a.id).status) - order(entry(b.id).status) || (entry(b.id).updated || '').localeCompare(entry(a.id).updated || ''));
     const n = s => Object.values(tracker).filter(e => e.status === s).length;
@@ -1270,27 +1274,26 @@ def run_search(cfg, fetcher, use_linkedin, extra_queries):
     queries = cfg["queries"]
     found = []
     print("Searching…")
+    student = cfg["student_searches"]
+    # Per site: keyword searches, then the ones restricted to internship / part-time contracts (their hits get tagged).
     for loc in cfg["locations"]:
         if "profesia" in loc:
             for q in queries.get("profesia", []) + extra_queries:
                 found += search_profesia(fetcher, loc, q, cfg)
+            for jobtype in student["profesia_jobtypes"].items():
+                found += search_profesia(fetcher, loc, None, cfg, jobtype)
         if "jobscz" in loc:
             for q in queries.get("jobscz", []) + extra_queries:
                 found += search_jobscz(fetcher, loc, q, cfg)
+            for q in student["jobscz_part_time_queries"]:
+                found += search_jobscz(fetcher, loc, q, cfg, part_time=True)
         if use_linkedin:
             for place in loc.get("linkedin", [loc["name"]]):
                 for q in queries.get("linkedin", []):
                     found += search_linkedin(fetcher, loc, q, cfg, place)
-                for q in cfg["student_searches"].get("linkedin_queries", []):
+                for q in student.get("linkedin_queries", []):
                     found += search_linkedin(fetcher, loc, q, cfg, place, student=True)
-        # Searches restricted to internships / part-time contracts; their hits get tagged.
-        if "profesia" in loc:
-            for jobtype in cfg["student_searches"]["profesia_jobtypes"].items():
-                found += search_profesia(fetcher, loc, None, cfg, jobtype)
-        if "jobscz" in loc:
-            for q in cfg["student_searches"]["jobscz_part_time_queries"]:
-                found += search_jobscz(fetcher, loc, q, cfg, part_time=True)
-    if cfg["student_searches"].get("worki"):
+    if student.get("worki"):
         found += search_worki(fetcher, cfg)
     SEARCH_FILE.parent.mkdir(exist_ok=True)
     SEARCH_FILE.write_text(json.dumps(found, ensure_ascii=False), encoding="utf-8")
@@ -1549,6 +1552,17 @@ def start_background_search(port):
     return True
 
 
+def rerank_if_idle():
+    """Re-rank in the calling thread. False, without waiting, when a search or another re-rank is running."""
+    if not WORK_LOCK.acquire(blocking=False):
+        return False
+    try:
+        rerank(read_notes=True)
+    finally:
+        WORK_LOCK.release()
+    return True
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -1566,46 +1580,59 @@ class Handler(BaseHTTPRequestHandler):
         # Only answer requests addressed to this machine by its local name.
         return self.headers.get("Host", "").split(":")[0] in ("127.0.0.1", "localhost")
 
+    def same_origin(self):
+        # Browsers send Origin with cross-site POSTs: a page on another site must not drive this API.
+        host = self.headers.get("Host")
+        return self.headers.get("Origin", f"http://{host}") == f"http://{host}"
+
+    def json_body(self):
+        return json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
+
     def do_GET(self):
         if not self.local():
             return self.reply(403, {"error": "forbidden"})
-        if self.path in ("/", "/index.html"):
-            return self.reply(200, REPORT_FILE.read_bytes(), "text/html")
-        if self.path == "/api/tracker":
-            return self.reply(200, load_tracker())
-        if self.path == "/api/search":
-            return self.reply(200, SEARCH_STATE)
-        if self.path == "/api/mail":
-            state = inbox.load_state()
-            return self.reply(200, {**MAIL_STATE, "last_check": state["last_check"], "messages": list(state["messages"].values())})
-        self.reply(404, {"error": "not found"})
+        match self.path:
+            case "/" | "/index.html":
+                self.reply(200, REPORT_FILE.read_bytes(), "text/html")
+            case "/api/tracker":
+                self.reply(200, load_tracker())
+            case "/api/search":
+                self.reply(200, SEARCH_STATE)
+            case "/api/mail":
+                state = inbox.load_state()
+                self.reply(200, {**MAIL_STATE, "last_check": state["last_check"],
+                                 "messages": list(state["messages"].values())})
+            case _:
+                self.reply(404, {"error": "not found"})
 
     def do_POST(self):
-        if not self.local() or self.headers.get("Origin", f"http://{self.headers.get('Host')}") != f"http://{self.headers.get('Host')}":
+        if not (self.local() and self.same_origin()):
             return self.reply(403, {"error": "forbidden"})
-        if self.path == "/api/search":
-            start_background_search(self.server.server_port)
-            return self.reply(202, SEARCH_STATE)
-        if self.path == "/api/rerank":
-            if not WORK_LOCK.acquire(blocking=False):
-                return self.reply(409, {"error": "a search is running"})
-            try:
-                rerank(read_notes=True)
-            finally:
-                WORK_LOCK.release()
-            return self.reply(200, {"ok": True})
-        if self.path == "/api/mail/check":
-            start_mail_check(self.server.server_port)
-            return self.reply(202, MAIL_STATE)
-        if self.path == "/api/mail":
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
-            entry = inbox.mark(str(body.get("id")), body.get("done"))
-            return self.reply(200, entry) if entry else self.reply(404, {"error": "not found"})
-        if self.path == "/api/tracker":
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))))
-            with TRACKER_LOCK:
-                return self.reply(200, self.update_tracker(body))
-        self.reply(404, {"error": "not found"})
+        match self.path:
+            case "/api/search":
+                start_background_search(self.server.server_port)
+                self.reply(202, SEARCH_STATE)
+            case "/api/rerank":
+                if rerank_if_idle():
+                    self.reply(200, {"ok": True})
+                else:
+                    self.reply(409, {"error": "a search is running"})
+            case "/api/mail/check":
+                start_mail_check(self.server.server_port)
+                self.reply(202, MAIL_STATE)
+            case "/api/mail":
+                body = self.json_body()
+                if entry := inbox.mark(str(body.get("id")), body.get("done")):
+                    self.reply(200, entry)
+                else:
+                    self.reply(404, {"error": "not found"})
+            case "/api/tracker":
+                body = self.json_body()
+                with TRACKER_LOCK:
+                    entry = self.update_tracker(body)
+                self.reply(200, entry)
+            case _:
+                self.reply(404, {"error": "not found"})
 
     def update_tracker(self, body):
         tracker = load_tracker()
